@@ -1,5 +1,18 @@
 # Validation — 13 November 2026
 
+## Supabase connection — 15 November 2026
+
+- Connected the existing **MfaroBooking** project (`eijhlpsugkqfmbqgfhpp`) through the **Andrew-II** account, organisation **Mfaro**.
+- **42 local tests passed**, covering the booking engine, API, PostgreSQL dialect translation and authenticated transport/batch handling.
+- **24 live API workflow tests passed** against Supabase, including concurrent exclusive reservations, group capacity, accommodation boundaries, payments/refunds, signed event deduplication, tenant/branch permissions, onboarding and guest rescheduling.
+- **6 live connection/security checks passed**: authenticated connection; denial of an incorrect application key; denial of an invalid JWT; denial of arbitrary SQL/role escalation; denial of private credential-table queries; and complete rollback of a failing transaction.
+- Running local Worker returned HTTP **200** from the authenticated bootstrap using Supabase. A separate database query confirmed **6 workspaces owned by the local demo account** in PostgreSQL.
+- PostgreSQL has **9 RLS-enabled tables** across the app and credential schemas. Neither `anon` nor `authenticated` has access to the application schema. Supabase security advisor returned **no findings** after the changes.
+- Supabase connection values are stored only in ignored local runtime configuration and the existing private Sites secret store. No database key is included in source archives or GitHub.
+- The local D1 demonstration database was preserved, not imported. Live verification uses isolated fictional test accounts.
+
+The Supabase database and connection Edge Function are deployed and verified. This does not constitute deployment of the frontend website.
+
 ## Branding update — 15 November 2026
 
 - `npm test`: **33 passed, 0 failed**.

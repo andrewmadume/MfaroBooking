@@ -14,7 +14,11 @@ The official supplied logo is included unchanged at `public/brand/mfarobooking-l
 
 Unauthenticated workspace visitors see the branded sign-in page. Both account-entry pages use the existing ChatGPT authentication flow. The first successful sign-in creates the workspace account; this release does not add a separate email/password authentication provider.
 
-GitHub hosts the source code. Running the complete application still requires a Worker runtime, D1 database binding and trusted authentication integration as described below; GitHub Pages alone cannot run its server-side booking engine.
+GitHub hosts the source code. Running the complete application still requires a Worker runtime, the configured Supabase database (or local D1 fallback), and trusted authentication integration as described below; GitHub Pages alone cannot run its server-side booking engine.
+
+## Supabase connection
+
+MfaroBooking is connected to the **MfaroBooking** project in the **Andrew-II** Supabase account. The active workspace uses the server-only settings in ignored `.dev.vars`. See [supabase/README.md](supabase/README.md) for the connection, schema, access boundaries, live tests and deployment-secret instructions. Production keys are never published to GitHub.
 
 ## Run locally
 
@@ -23,7 +27,7 @@ Requires Node.js 24 and npm. From this directory:
 ```powershell
 npm ci
 npm run build
-npm run db:local
+npm run db:local # only for a fresh local D1 fallback; skip with Supabase configured
 npm run dev
 ```
 
@@ -51,7 +55,7 @@ The hosted Site starts owner-private. The booking-page journey is implemented, b
 - Persistent customer, staff, service and resource creation and editing. Duplicate customer-email detection. New online bookings create or reuse customer profiles.
 - Appointment durations and cleanup buffers, assigned staff/resources, capacity-limited sessions, operating hours, minimum notice, advance limits and time-zone-aware availability.
 - Exclusive accommodation units, nightly prices, minimum stays, occupancy limits, maintenance status, check-in and check-out statuses. Arrival is inclusive and departure exclusive.
-- Atomic reservation creation with an inventory check in the write statement; customer profile, hashed management token, notification previews and audit entry commit in the same D1 transaction.
+- Atomic reservation creation with an inventory check in the write statement; customer profile, hashed management token, notification previews and audit entry commit in the same database transaction.
 - Idempotent creation keys, signed sandbox payment webhook events, exact integer money values, payments, deposits, balances and refunds with transactional balance guards.
 - Booking tables, day/week/rolling-month/agenda calendar views, status and staff filters, form-based rescheduling, CSV exports, printable schedules and ICS export.
 - Customer booking pages, expiring private booking links, self-service rescheduling and cancellation subject to policy, downloadable booking statements.
@@ -62,7 +66,7 @@ The hosted Site starts owner-private. The booking-page journey is implemented, b
 
 ## Architecture
 
-The Sites Vinext starter supplies the React/Next.js-compatible application and Cloudflare Worker build. Drizzle defines the SQLite schema and generates migrations. Runtime queries use prepared D1 statements, including conditional writes where SQL-level concurrency control is important. D1 `batch()` provides atomic multi-statement operations.
+The Sites Vinext starter supplies the React/Next.js-compatible application and Cloudflare Worker build. The runtime data-access contract supports the connected Supabase PostgreSQL database over an authenticated HTTPS Edge Function, with D1 retained as a local fallback. Application query templates and bound values are transmitted separately. The Edge Function accepts only generated, approved query templates and runs batches as PostgreSQL transactions, with serialized writes protecting inventory and payment checks. Drizzle's SQLite schema/migrations apply only to the D1 fallback; `supabase/schema.sql` describes the hosted PostgreSQL schema.
 
 `businesses` and `members` define tenant ownership and access. `records` holds validated typed business entities. `bookings`, `payments`, `delivery`, `events` and `limits` hold operational records. Every private data-access path scopes by workspace and checks membership. Staff see assigned bookings; restricted managers see their branch. No secret provider keys are sent to the browser.
 
@@ -72,7 +76,7 @@ Reservation retries require a UUID key generated with `crypto.randomUUID()`. A m
 
 ## Environment and deployment
 
-Sites provisions the `DB` D1 binding from `.openai/hosting.json` and applies the committed Drizzle migration during publication. No database password or external API key is required for the demo.
+The active Andrew-II Supabase connection requires `SUPABASE_GATEWAY_URL`, `SUPABASE_GATEWAY_ANON_KEY` and `MFARO_DATABASE_KEY`, configured only on the server. They are present in this workspace's ignored `.dev.vars` and saved as secrets in the private Sites runtime configuration. Fresh clones need their own secret configuration; see `supabase/README.md`. The optional `DB` binding and Drizzle migration remain available for a separate local D1 fallback.
 
 Optional runtime secret:
 

@@ -1,5 +1,11 @@
 import { env } from 'cloudflare:workers';
-export function database(){if(!env.DB)throw Error('Database binding DB is required.');return env.DB;}
+import { SupabaseDatabase } from './supabase-database';
+import type {ApplicationDatabase} from './database-contract';
+export function database():ApplicationDatabase{
+ if(env.SUPABASE_GATEWAY_URL)return new SupabaseDatabase({url:env.SUPABASE_GATEWAY_URL,anonKey:env.SUPABASE_GATEWAY_ANON_KEY||'',databaseKey:env.MFARO_DATABASE_KEY||''});
+ if(!env.DB)throw Error('Configure the Supabase database connection or a local D1 binding.');
+ return env.DB as unknown as ApplicationDatabase;
+}
 export const id=()=>crypto.randomUUID();
 export async function all(sql:string,...args:any[]){return (await database().prepare(sql).bind(...args).all()).results as any[];}
 export async function one(sql:string,...args:any[]){return await database().prepare(sql).bind(...args).first() as any;}

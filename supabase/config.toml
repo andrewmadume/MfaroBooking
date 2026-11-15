@@ -1,0 +1,5 @@
+project_id = "eijhlpsugkqfmbqgfhpp"
+
+[functions.mfarobooking-db]
+verify_jwt = true
+entrypoint = "./functions/mfarobooking-db/index.ts"

@@ -4,9 +4,10 @@ import type { ConnectorBinding } from "../lib/connector-contract.mjs";
 
 const worker = {
   async scheduled(_event: ScheduledController, env: Cloudflare.Env, ctx: ExecutionContext) {
-    if (env.DB) {
+    if (env.DB || env.SUPABASE_GATEWAY_URL) {
       const { processReminderPreviews } = await import('../lib/integrations');
-      ctx.waitUntil(processReminderPreviews(env.DB));
+      const { database } = await import('../lib/db');
+      ctx.waitUntil(processReminderPreviews(database()));
     }
   },
   fetch(request: Request, env: Cloudflare.Env, ctx: ExecutionContext<{ CONNECTORS?: ConnectorBinding }>) {
