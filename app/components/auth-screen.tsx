@@ -1,5 +1,6 @@
 import { ArrowRight,CalendarCheck2,ShieldCheck,UsersRound } from 'lucide-react';
 import { Brand } from './brand';
+import {VercelAuthForm} from './vercel-auth-form';
 
 export function AuthScreen({mode='signin'}:{mode?:'signin'|'register'}) {
   const register=mode==='register';
@@ -24,13 +25,13 @@ export function AuthScreen({mode='signin'}:{mode?:'signin'|'register'}) {
         </nav>
         <span className="eyebrow">{register?'YOUR NEXT CHAPTER STARTS HERE':'WELCOME BACK'}</span>
         <h2 id="auth-title">{register?'Let’s get your business ready.':'Good to see you again.'}</h2>
-        <p>{register?'Create your MfaroBooking workspace using your ChatGPT account.':'Sign in to manage your bookings and keep your day running smoothly.'}</p>
-        <a className="btn primary auth-continue" href="/signin-with-chatgpt?return_to=%2F" target="_top">
+        <p>{register?'Create your MfaroBooking workspace.':'Sign in to manage your bookings and keep your day running smoothly.'}</p>
+        {process.env.NEXT_PUBLIC_VERCEL_AUTH==='true'?<VercelAuthForm register={register}/>:<><a className="btn primary auth-continue" href="/signin-with-chatgpt?return_to=%2F" target="_top">
           {register?'Create account with ChatGPT':'Sign in with ChatGPT'}<ArrowRight size={18}/>
         </a>
         <div className="auth-security"><ShieldCheck size={16}/><span>Secure authentication provided by ChatGPT.</span></div>
         <p className="auth-explainer">{register?'Your first sign-in creates your workspace account. You can explore the demo businesses, then set up your own business in Settings.':'Use the same ChatGPT account you used to create your workspace. Your existing bookings and business settings will be waiting for you.'}</p>
-        <div className="auth-switch">{register?'Already have an account?':'New to MfaroBooking?'} <a href={register?'/signin':'/register'}>{register?'Sign in':'Create an account'}</a></div>
+        </>}<div className="auth-switch">{register?'Already have an account?':'New to MfaroBooking?'} <a href={register?'/signin':'/register'}>{register?'Sign in':'Create an account'}</a></div>
       </section>
     </div>
     <footer className="auth-footer">MfaroBooking · Every booking. Perfectly managed.</footer>
