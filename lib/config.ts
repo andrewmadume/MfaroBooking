@@ -1,0 +1,1 @@
+export const defaults={timezone:'Africa/Johannesburg',currency:'ZAR',country:'South Africa',branch:'Main branch',open:8,close:18,notice:60,advance:365,cancellation:24,deposit:25,tax:0,published:true,email:'hello@example.com',phone:'+27 11 555 0100',address:'42 Jacaranda Avenue, Johannesburg'};

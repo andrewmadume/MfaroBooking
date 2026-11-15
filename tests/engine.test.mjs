@@ -1,0 +1,12 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { cents,overlaps,authorize,bookingRange,validateWindow,canCancel,localParts } from '../lib/engine.ts';
+test('money parses exact minor units without floating point multiplication',()=>{assert.equal(cents('0.29'),29);assert.equal(cents('123456.78'),12345678);for(const v of ['1.001','-2','NaN','1e2',''])assert.throws(()=>cents(v));});
+test('departure date is excluded from occupied nights',()=>{assert.equal(overlaps(100,200,200,300),false);assert.equal(overlaps(100,201,200,300),true);});
+test('appointment duration includes cleanup buffer',()=>{const [a,b]=bookingRange('2027-01-01T08:00:00Z',null,false,60,15);assert.equal(b-a,75*60000)});
+test('overnight bookings reject invalid and partial-night ranges',()=>{assert.throws(()=>bookingRange('2027-01-02','2027-01-01',true,0,0));assert.throws(()=>bookingRange('2027-01-01T00:00Z','2027-01-02T01:00Z',true,0,0));});
+test('staff and reception permissions are least privilege',()=>{assert.equal(authorize('staff','payment'),false);assert.equal(authorize('staff','status'),true);assert.equal(authorize('receptionist','settings'),false);assert.equal(authorize('receptionist','booking'),true);assert.equal(authorize('unknown','read'),false);});
+test('business hours are evaluated in the business time zone',()=>{const s={timezone:'Africa/Johannesburg',open:8,close:18,notice:0,advance:365};const now=Date.parse('2027-01-01');assert.doesNotThrow(()=>validateWindow(Date.parse('2027-01-02T06:00Z'),Date.parse('2027-01-02T07:00Z'),s,false,now));assert.throws(()=>validateWindow(Date.parse('2027-01-02T05:00Z'),Date.parse('2027-01-02T06:00Z'),s,false,now));});
+test('daylight-saving time zones use the offset at the appointment instant',()=>{assert.equal(localParts(Date.parse('2027-01-01T12:00Z'),'Europe/London').hour,'12');assert.equal(localParts(Date.parse('2027-07-01T12:00Z'),'Europe/London').hour,'13');});
+test('notice and advance limits reject bookings outside policy',()=>{const now=Date.parse('2027-01-01');const s={timezone:'UTC',open:0,close:24,notice:60,advance:30};assert.throws(()=>validateWindow(now+30*60000,now+45*60000,s,false,now));assert.throws(()=>validateWindow(now+31*86400000,now+32*86400000,s,true,now));});
+test('cancellation boundary is inclusive',()=>{const now=100000;assert.equal(canCancel(now+24*3600000,24,now),true);assert.equal(canCancel(now+24*3600000-1,24,now),false);});
